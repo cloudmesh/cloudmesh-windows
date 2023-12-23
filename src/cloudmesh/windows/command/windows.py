@@ -8,6 +8,7 @@ from cloudmesh.common.variables import Variables
 from cloudmesh.shell.command import PluginCommand
 from cloudmesh.shell.command import command
 from cloudmesh.shell.command import map_parameters
+from cloudmesh.windows.windows import Windows
 
 
 class WindowsCommand(PluginCommand):
@@ -18,9 +19,9 @@ class WindowsCommand(PluginCommand):
         ::
 
           Usage:
-                windows --file=FILE
-                windows list
-                windows [--parameter=PARAMETER] [--experiment=EXPERIMENT] [COMMAND...]
+                windows deploy
+                windows download [--version=VERSION]
+                windows install
 
           This command does some useful things.
 
@@ -29,81 +30,30 @@ class WindowsCommand(PluginCommand):
               PARAMETER  a parameterized parameter of the form "a[0-3],a5"
 
           Options:
-              -f      specify the file
+              --version=VERSION  the version. only supported version is 11 [default: 11]
 
           Description:
 
-            > cms windows --parameter="a[1-2,5],a10"
-            >    example on how to use Parameter.expand. See source code at
-            >      https://github.com/cloudmesh/cloudmesh-windows/blob/main/cloudmesh/windows/command/windows.py
-            >    prints the expanded parameter as a list
-            >    ['a1', 'a2', 'a3', 'a4', 'a5', 'a10']
-
-            > windows exp --experiment=a=b,c=d
-            > example on how to use Parameter.arguments_to_dict. See source code at
-            >      https://github.com/cloudmesh/cloudmesh-windows/blob/main/cloudmesh/windows/command/windows.py
-            > prints the parameter as dict
-            >   {'a': 'b', 'c': 'd'}
+            > cms windows deploy
+            >   deploys a windows vm on ubuntu 22.04. No other os is supported.
 
         """
 
-        # arguments.FILE = arguments['--file'] or None
 
-        # switch debug on
-
-        variables = Variables()
-        variables["debug"] = True
-
-        banner("original arguments", color="RED")
+        map_parameters(arguments, "version")
 
         VERBOSE(arguments)
-
-        banner(
-            "rewriting arguments so we can use . notation for file, parameter, and experiment",
-            color="RED",
-        )
-
-        map_parameters(arguments, "file", "parameter", "experiment")
-
-        VERBOSE(arguments)
-
-        banner(
-            "rewriting arguments so we convert to appropriate types for easier handling",
-            color="RED",
-        )
-
-        arguments = Parameter.parse(
-            arguments, parameter="expand", experiment="dict", COMMAND="str"
-        )
-
-        VERBOSE(arguments)
-
-        banner("showcasing tom simple if parsing based on teh dotdict", color="RED")
 
         m = Windows()
+        if arguments.download:
 
-        #
-        # It is important to keep the programming here to a minimum and any substantial programming ought
-        # to be conducted in a separate class outside the command parameter manipulation. If between the
-        # elif statement you have more than 10 lines, you may consider putting it in a class that you import
-        # here and have proper methods in that class to handle the functionality. See the Manager class for
-        # an example.
-        #
+            banner(f"Download Windoes {arguments.version}")
 
-        if arguments.file:
-            print("option a")
-            m.list(path_expand(arguments.file))
+            m.download()
 
-        elif arguments.list:
-            print("option b")
-            m.list("just calling list without parameter")
+        elif arguments.deploy:
 
-        Console.error("This is just a sample of an error")
-        Console.warning("This is just a sample of a warning")
-        Console.info("This is just a sample of an info")
-
-        Console.info(
-            " You can witch debugging on and off with 'cms debug on' or 'cms debug off'"
-        )
+            banner(f"Deploy Windoes {arguments.version}")
+            m.deploy()
 
         return ""
